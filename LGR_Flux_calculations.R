@@ -1,16 +1,35 @@
+# Author(s): Josep Barba, University of Birmingham
+# License: example CC-BY 4.0
+# 2018/09/26
 
-# Linear and exponential fluxes calculated from LGR measurements    (created by jbarba at 09262018)
-## This script contents data compilation from different LGR files and fluxes processing using linear and exponential fits
 
-# Load packages
+# Linear and exponential fluxes calculated from LGR measurements    
+## This script contains data compilation from different LGR files and fluxes processing using linear and exponential fits
+
+
+
+# Load packages -----------------------------------------------------------
 library(data.table)
-library(lubridate)
 library(doBy)
-library(dplyr)
-library(padr)
-library(zoo)
+#library(lubridate)
+#library(dplyr)
+#library(padr) 
+#library(zoo)
 
-  
+# list.functions.in.file('LGR_Flux_calculations.R') 
+# rbindlist from library(data.table) 
+# summaryBy from library(doBy)
+
+
+# Working environment -----------------------------------------------------------
+
+inFilesRaw <- '//anr.udel.edu/files/shares/jbarba/My Documents/SJ_Data/SJ_stem_fluxes/SJ_stem_fluxes_LGR/SJ_LGR_RawData'
+inFilesProcessed <- '//anr.udel.edu/files/shares/jbarba/My Documents/SJ_Data/SJ_stem_fluxes/SJ_full_paper/txt/'
+filesDropBox <- 'C:/Users/barbafej/Dropbox/SJ_stem_fluxes/SJ_studies/SJ_full_paper/txt/'
+
+setwd(inFilesRaw)
+
+
 # Merging LGR files -----------------------------------------------------------
   
   ## With this chunk of script we can make one data table from a list of many. It reads all files from a folder and their Tree subfolders and merge them.
@@ -18,7 +37,7 @@ library(zoo)
   
   # LGR sometimes saves files in .zip. The first part of this chunk is for decompress all .zip files from a given folder
     # List all .zip files including sub-folders
-    list_of_zip_files <- list.files(path = "//anr.udel.edu/files/shares/jbarba/My Documents/SJ_Data/SJ_stem_fluxes/SJ_stem_fluxes_LGR/SJ_LGR_RawData", recursive=TRUE, 
+    list_of_zip_files <- list.files(path = inFilesRaw, recursive=TRUE, 
                       pattern="\\.zip$", full.names=TRUE)
     
     # Decompress all .zip files from a given folder and subfolders
@@ -26,7 +45,7 @@ library(zoo)
   
   # List all txt files, merge them in one single file and create a variable with the name of each original file 
     # List all txt files
-    list_of_txt_files <- list.files(path = "//anr.udel.edu/files/shares/jbarba/My Documents/SJ_Data/SJ_stem_fluxes/SJ_stem_fluxes_LGR/SJ_LGR_RawData", recursive = TRUE,
+    list_of_txt_files <- list.files(path = inFilesRaw, recursive = TRUE,
                               pattern = "\\.txt$", full.names = T)  #with full.name=F the function save the name of each file instead of the name of each path. This is useful for the idcol in the next section 
  
     # Read all the files and create a Path column to store filenames
@@ -46,12 +65,82 @@ library(zoo)
     LGR_data$file_name <- x$name
     
     #Some names of the variables have " ", [, ], and '. We have to remove these characters for further analysis.
-    colnames(LGR_data) <- c('Path', 'Time', 'CH4_ppm', 'CH4_ppm_sd', 'H2O_ppm', 'H2O_ppm_sd', 'CO2_ppm', 'CO2_ppm_sd', 'CH4d_ppm', 'CH4d_ppm_sd', 'CO2d_ppm', 'CO2d_ppm_sd', 'GasP_torr', 'GasP_torr_sd', 'GasT_C', 
-                            'GasT_C_sd', 'AmbT_C', 'AmbT_C_sd', 'RD0_us', 'RD0_us_sd', 'RD1_us', 'D1_us_sd', 'Gnd', 'Gnd_sd', 'LTC0_b', 'LTC0_b_sd', 'LTC0_v', 'LTC0_v_sd', 'LTC1_b', 'LTC1_b_sd', 'LTC1_v', 'LTC1_v_sd', 
-                            'BL0T', 'BL0T_sd', 'BL1T', 'BL1T_sd', 'BL2F', 'BL2F_sd', 'BL3F', 'BL3F_sd', '12CH4_4_CT', '12CH4_4_CT_sd', '12CH4_4_AT', '12CH4_4_AT_sd', '12CH4_4_DF', '12CH4_4_DF_sd', '12CH4_4_PF', 
-                            '12CH4_4_PF_sd', 'H2O_12_CF', 'H2O_12_CF_sd', 'H2O_12_AT', 'H2O_12_AT_sd', 'H2O_12_DF', 'H2O_12_DF_sd', 'H2O_12_PF', 'H2O_12_PF_sd', 'BL0T_B', 'BL0T_B_sd', 'BL1T_B', 'BL1T_B_sd', 'BL2F_B', 
-                            'BL2F_B_sd', 'BL3F_B', 'BL3F_B_sd', '12CO2_0_CT_B', '12CO2_0_CT_B_sd', '12CO2_0_AT_B', '12CO2_0_AT_B_sd', '12CO2_0_DF_B', '12CO2_0_DF_B_sd', '12CO2_0_PF_B', '12CO2_0_PF_B_sd', 'Fit_Flag', 
-                            'N_Fits_Avg_d', 'MIU', 'file_name')
+    colnames(LGR_data) <- c('Path', 
+                            'Time', 
+                            'CH4_ppm', 
+                            'CH4_ppm_sd', 
+                            'H2O_ppm', 
+                            'H2O_ppm_sd', 
+                            'CO2_ppm', 
+                            'CO2_ppm_sd', 
+                            'CH4d_ppm', 
+                            'CH4d_ppm_sd', 
+                            'CO2d_ppm', 
+                            'CO2d_ppm_sd', 
+                            'GasP_torr', 
+                            'GasP_torr_sd', 
+                            'GasT_C', 
+                            'GasT_C_sd', 
+                            'AmbT_C', 
+                            'AmbT_C_sd', 
+                            'RD0_us', 
+                            'RD0_us_sd', 
+                            'RD1_us', 
+                            'D1_us_sd', 
+                            'Gnd', 
+                            'Gnd_sd', 
+                            'LTC0_b', 
+                            'LTC0_b_sd', 
+                            'LTC0_v', 
+                            'LTC0_v_sd', 
+                            'LTC1_b', 
+                            'LTC1_b_sd', 
+                            'LTC1_v', 
+                            'LTC1_v_sd', 
+                            'BL0T', 
+                            'BL0T_sd', 
+                            'BL1T', 
+                            'BL1T_sd', 
+                            'BL2F', 
+                            'BL2F_sd', 
+                            'BL3F', 
+                            'BL3F_sd', 
+                            '12CH4_4_CT', 
+                            '12CH4_4_CT_sd', 
+                            '12CH4_4_AT', 
+                            '12CH4_4_AT_sd', 
+                            '12CH4_4_DF', 
+                            '12CH4_4_DF_sd', 
+                            '12CH4_4_PF', 
+                            '12CH4_4_PF_sd', 
+                            'H2O_12_CF', 
+                            'H2O_12_CF_sd', 
+                            'H2O_12_AT', 
+                            'H2O_12_AT_sd', 
+                            'H2O_12_DF', 
+                            'H2O_12_DF_sd', 
+                            'H2O_12_PF', 
+                            'H2O_12_PF_sd', 
+                            'BL0T_B', 
+                            'BL0T_B_sd', 
+                            'BL1T_B', 
+                            'BL1T_B_sd', 
+                            'BL2F_B', 
+                            'BL2F_B_sd', 
+                            'BL3F_B', 
+                            'BL3F_B_sd', 
+                            '12CO2_0_CT_B', 
+                            '12CO2_0_CT_B_sd', 
+                            '12CO2_0_AT_B', 
+                            '12CO2_0_AT_B_sd', 
+                            '12CO2_0_DF_B', 
+                            '12CO2_0_DF_B_sd', 
+                            '12CO2_0_PF_B', 
+                            '12CO2_0_PF_B_sd', 
+                            'Fit_Flag', 
+                            'N_Fits_Avg_d', 
+                            'MIU', 
+                            'file_name')
 
     LGR_data<- as.data.frame(LGR_data) 
         
@@ -65,6 +154,7 @@ library(zoo)
         date_time=strptime(LGR_data$Time,format='%m/%d/%Y %H:%M:%S')
         
         ##  Add year, month, day, JD, hour, min, sec columns to dataframe
+    
         Year<-as.numeric(format(date_time,'%Y'))
         Month<-as.numeric(format(date_time,'%m'))
         Day<-as.numeric(format(date_time,'%d'))
@@ -98,25 +188,26 @@ library(zoo)
         LGR_data$TIMEnew8 <- paste(as.factor(LGR_data$Hour), as.factor(LGR_data$Min), as.factor(LGR_data$Sec8), sep=':')
         LGR_data$TIMEnew9 <- paste(as.factor(LGR_data$Hour), as.factor(LGR_data$Min), as.factor(LGR_data$Sec9), sep=':')
         
-        write.table(LGR_data,file="//anr.udel.edu/files/shares/jbarba/My Documents/SJ_Data/SJ_stem_fluxes/SJ_full_paper/txt/LGR_data.txt",sep="\t")   
+        write.table(LGR_data,file=paste0(inFilesProcessed,"LGR_data.txt"),sep="\t")   
         #This LGR_data is the data frame combining all LGR files, with renamed variables, and with several new variables required for flux estimation. 
     
             
   ## LGR_field_notes
     # Create new variables for meteo, diameter, collar height
 
-      setwd("C:/Users/barbafej/Dropbox/SJ_stem_fluxes/SJ_studies/SJ_full_paper/txt")                        
-      LGR_fn <- read.table("C:/Users/barbafej/Dropbox/SJ_stem_fluxes/SJ_studies/SJ_full_paper/txt/LGR_field_notes.txt", fill=TRUE,header=TRUE,sep="\t",na.strings=c("NA","#N/A!","#N/A","#NA!"))    
+      LGR_fn <- read.table(paste0(filesDropBox,"LGR_field_notes.txt"), fill=TRUE,header=TRUE,sep="\t",na.strings=c("NA","#N/A!","#N/A","#NA!"))    
       
       #Meteo: meteo information measured every 15 min. If Atm pressure is used for calculating the fluxes, you might need this file. Otherwise, a constant AtmPress could be used. 
-      Meteo <- read.table("C:/Users/barbafej/Dropbox/SJ_stem_fluxes/SJ_studies/SJ_full_paper/txt/SJ_meteo_data.txt", fill=TRUE,header=TRUE,sep="\t",na.strings=c("NA","#N/A!","#N/A","#NA!"))    
-                                                    #Tree_diam: diameters for each tree at the heigh of each collar. Not necessary for calculating the fluxes
-                                                    Tree_diam <- read.table("//anr.udel.edu/files/shares/jbarba/My Documents/SJ_Data/SJ_stem_fluxes/SJ_full_paper/txt/SJ_tree_diameters.txt", fill=TRUE,header=TRUE,sep="\t",na.strings=c("NA","#N/A!","#N/A","#NA!"))
-                                                    #For_str: forest structure structure file for the plot. Not necessary for calculating the fluxes
+      Meteo <- read.table(paste0(filesDropBox,"SJ_meteo_data.txt"), fill=TRUE,header=TRUE,sep="\t",na.strings=c("NA","#N/A!","#N/A","#NA!"))    
+      
+      #Tree_diam: diameters for each tree at the heigh of each collar. Not necessary for calculating the fluxes
+      Tree_diam <- read.table(paste0(inFilesProcessed,"SJ_tree_diameters.txt"), fill=TRUE,header=TRUE,sep="\t",na.strings=c("NA","#N/A!","#N/A","#NA!"))
+      
+      #For_str: forest structure structure file for the plot. Not necessary for calculating the fluxes
       # Eliminar?                                              For_str <- read.table("//anr.udel.edu/files/shares/jbarba/My Documents/SJ_Data/SJ_stem_fluxes/SJ_full_paper/txt/SJ_forest_structure.txt", fill=TRUE,header=TRUE,sep="\t",na.strings=c("NA","#N/A!","#N/A","#NA!"))
                                                     #GWT: ground water table measured every 15 min measured at the center of the plot. Not necessary for calculating the fluxes
-                                                    GWT<-read.table("//anr.udel.edu/files/shares/jbarba/My Documents/SJ_Data/SJ_stem_fluxes/SJ_full_paper/txt/SJ_GWL.txt", fill=TRUE,header=TRUE,sep="\t",na.strings=c("NA","#N/A!","#N/A","#NA!"))
-                                                    SF<-read.table("//anr.udel.edu/files/shares/jbarba/My Documents/SJ_Data/SJ_stem_fluxes/SJ_full_paper/txt/SJ_SF_full_experiment.txt", fill=TRUE,header=TRUE,sep="\t",na.strings=c("NA","#N/A!","#N/A","#NA!"))
+      GWT<-read.table(paste0(inFilesProcessed, "SJ_GWL.txt"), fill=TRUE,header=TRUE,sep="\t",na.strings=c("NA","#N/A!","#N/A","#NA!"))
+      SF<-read.table(paste0(inFilesProcessed, "SJ_SF_full_experiment.txt"), fill=TRUE,header=TRUE,sep="\t",na.strings=c("NA","#N/A!","#N/A","#NA!"))
                                                     
       LGR_fn$Hour <- as.integer(sapply(strsplit(as.character(LGR_fn$Real_time), ":"), "[", 1))
       #LGR_fn (field notes) is a txt file with the information recorded in the field (LGR file name, code for samplig point, initial measurement time...[see the LGR_field_notes_example Excel])
@@ -145,18 +236,20 @@ library(zoo)
         }    
       }      
 
-  write.table(LGR_fn,file="C:/Users/barbafej/Dropbox/SJ_stem_fluxes/SJ_studies/SJ_full_paper/txt/LGR_fn.txt",sep="\t")   
+  write.table(LGR_fn,file=paste0(filesDropBox,"LGR_fn.txt"),sep="\t")   
                                                          
 
 # Flux calculation --------------------------------------------------------
                             
-    LGR_data <- read.table("C:/Users/barbafej/Dropbox/SJ_stem_fluxes/SJ_studies/SJ_full_paper/txt/LGR_data.txt", fill=TRUE,header=TRUE,sep="\t",na.strings=c("NA","#N/A!","#N/A","#NA!"))
-    LGR_fn <- read.table("C:/Users/barbafej/Dropbox/SJ_stem_fluxes/SJ_studies/SJ_full_paper/txt/LGR_fn.txt", fill=TRUE,header=TRUE,sep="\t",na.strings=c("NA","#N/A!","#N/A","#NA!"))
+    LGR_data <- read.table(paste0(filesDropBox, "LGR_data.txt"), fill=TRUE,header=TRUE,sep="\t",na.strings=c("NA","#N/A!","#N/A","#NA!"))
+    LGR_fn <- read.table(paste0(filesDropBox, "LGR_fn.txt"), fill=TRUE,header=TRUE,sep="\t",na.strings=c("NA","#N/A!","#N/A","#NA!"))
 
     levfn <- levels(as.factor(LGR_fn$file_name)) #This is a list of the different file names in the field notes
     levdata <- levels(as.factor(LGR_data$file_name)) # This is a list of the different file names in the LGR_data. This list SHOULD HAVE AT LEAST the same files as in LGR_fn (but probably will have more files)
                                                       # Check that the files spelling is the same for LGR_data and LGR_fn 
     LGR_fluxes<-data.frame() 
+    
+    # Constants
     area<-pi*0.055^2  #area of the chamber in m2)
     vol<-area*0.095 + pi*0.00175^2*(1.62+1.70) + 0.0002 #volume chamber +volume tubbing + volume LGR cell in m3
     #AtmPress<-101.325 # I just put a constant value, but this should be improved (kg m-2 s-1)
@@ -166,55 +259,56 @@ library(zoo)
     
     datasub <- LGR_data[LGR_data$file_name==levfn[i],]
     fn <- LGR_fn[LGR_fn$file_name==levfn[i],]
-    fn$slopeCO2_lin <- NA
-    fn$intCO2_lin <- NA
-    fn$adjR2CO2_lin <- NA
-    fn$pvalueCO2_lin <- NA
-    fn$initial <- NA
-    
-    fn$aCO2_exp <- NA
-    fn$assymptCO2_exp <- NA
-    fn$slopeCO2_exp <- NA
-    fn$adjR2CO2_exp <- NA
-    fn$pvalueCO2_exp <- NA
-
-    fn$slopeCH4_lin <- NA
-    fn$intCH4_lin <- NA
-    fn$adjR2CH4_lin <- NA
-    fn$pvalueCH4_lin <- NA
-    
-    fn$aCH4_exp <- NA
-    fn$assymptCH4_exp <- NA
-    fn$slopeCH4_exp <- NA
-    fn$adjR2CH4_exp <- NA
-    fn$pvalueCH4_exp <- NA
-    
-    fn$slopeH2O_lin <- NA
-    fn$intH2O_lin <- NA
-    fn$adjR2H2O_lin <- NA
-    fn$pvalueH2O_lin <- NA
-    
-    fn$aH2O_exp <- NA
-    fn$assymptH2O_exp <- NA
-    fn$slopeH2O_exp <- NA
-    fn$adjR2H2O_exp <- NA
-    fn$pvalueH2O_exp <- NA
-    
-    fn$CO2_lin_flux <- NA
-    fn$CH4_lin_flux <- NA
-    fn$H2O_lin_flux <- NA
-    
-    fn$CO2_flux <- NA
-    fn$CO2_adjR2 <- NA
-    fn$CO2_fit <- NA
-    
-    fn$CH4_flux <- NA
-    fn$CH4_adjR2 <- NA
-    fn$CH4_fit <- NA
-    
-    fn$H2O_flux <- NA
-    fn$H2O_adjR2 <- NA
-    fn$H2O_fit <- NA
+    columns_to_add <- c('slopeCO2_lin',
+                        'intCO2_lin',
+                        'adjR2CO2_lin',
+                        'pvalueCO2_lin',
+                        'initial',
+                        
+                        'aCO2_exp',
+                        'assymptCO2_exp',
+                        'slopeCO2_exp',
+                        'adjR2CO2_exp',
+                        'pvalueCO2_exp',
+                        
+                        'slopeCH4_lin',
+                        'intCH4_lin',
+                        'adjR2CH4_lin',
+                        'pvalueCH4_lin',
+                        
+                        'aCH4_exp',
+                        'assymptCH4_exp',
+                        'slopeCH4_exp',
+                        'adjR2CH4_exp',
+                        'pvalueCH4_exp',
+                        
+                        'slopeH2O_lin',
+                        'intH2O_lin',
+                        'adjR2H2O_lin',
+                        'pvalueH2O_lin',
+                        
+                        'aH2O_exp',
+                        'assymptH2O_exp',
+                        'slopeH2O_exp',
+                        'adjR2H2O_exp',
+                        'pvalueH2O_exp',
+                        
+                        'CO2_lin_flux',
+                        'CH4_lin_flux',
+                        'H2O_lin_flux',
+                        
+                        'CO2_flux',
+                        'CO2_adjR2',
+                        'CO2_fit',
+                        
+                        'CH4_flux',
+                        'CH4_adjR2',
+                        'CH4_fit',
+                        
+                        'H2O_flux',
+                        'H2O_adjR2',
+                        'H2O_fit')
+      fn[,columns_to_add] <- NA
     
     levdat <- levels(as.factor(as.character(datasub$TIMEnew)))
     levdat2 <- levels(as.factor(as.character(datasub$TIMEnew2)))
@@ -413,5 +507,5 @@ library(zoo)
   }
 
   LGR_fluxes$Date<-strptime(LGR_fluxes$Date,format='%m/%d/%Y')  
-  write.table(LGR_fluxes,file="C:/Users/barbafej/Dropbox/SJ_stem_fluxes/SJ_studies/SJ_full_paper/txt/LGR_fluxes.txt", sep="\t",row.names=F,col.names=T) 
+  write.table(LGR_fluxes,file=paste0(filesDropBox,"LGR_fluxes.txt"), sep="\t",row.names=F,col.names=T) 
    
