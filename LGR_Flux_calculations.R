@@ -15,7 +15,7 @@ library(zoo)
   
   ## With this chunk of script we can make one data table from a list of many. It reads all files from a folder and their Tree subfolders and merge them.
   # It does not read compressed files
-  
+
   # LGR sometimes saves files in .zip. The first part of this chunk is for decompress all .zip files from a given folder
     # List all .zip files including sub-folders
     list_of_zip_files <- list.files(path = "//anr.udel.edu/files/shares/jbarba/My Documents/SJ_Data/SJ_stem_fluxes/SJ_stem_fluxes_LGR/SJ_LGR_RawData", recursive=TRUE, 
@@ -41,7 +41,7 @@ library(zoo)
         x[i, 1] <- aaa[[i]][[length(aaa[[i]])]]
             }
     
-  #If you got an error with one subfolder: sometimes a zip folder cannot be opened. If that is the case, you should copy-paste the txt file outside the compressed folder.
+  # Nezha>> Sometimes, I get an error with a subfolder: sometimes a zip folder cannot be opened. When that happens, I have to copy-paste the txt file outside the compressed folder. Could this be solved?
     
     LGR_data$file_name <- x$name
     
@@ -59,7 +59,8 @@ library(zoo)
   ## LGR_data
     # Re-adjust time format
     # Create new time variables for matching time from LGR_data and LGR_fn (field notes)
-    
+
+#Nezha>> I worte the following section for formating time, but I don't know if this is efficient.            
         ## Format time&date into useful columns 
         ##  Pull out date and time data
         date_time=strptime(LGR_data$Time,format='%m/%d/%Y %H:%M:%S')
@@ -72,7 +73,9 @@ library(zoo)
         DOY<-as.POSIXlt(date_time, format = "%d%b%y")
         Hour<-as.character(format(date_time,'%k'))
         Min<-as.character(format(date_time,'%M'))
-        
+  
+ #Nezha>> the next section clearly has to be optimized. There is one moment in the script that I have to match LGR_data time (data coming from the analyser) with LGR_fn (field notes specifying the initial time for each measurement). Sometimes, both times don't metch by one or two seconds, so what I'm trying to do here is creating new variables with 1, 2, 3... seconds of delay, and then create a loop to match the closest time possible. There should be a way to find the closest time without having to create new variables. 
+           
         # LGR does not measure every second, so there is a chance that one "initial time" in the field notes doesn't exactly match with a time listed in LGR_data
           # so I created Sec2, Sec3, Sec4 and Sec5 variables to be sure that there is one LGR_data time for each "field notes" time 
         Sec<-as.character(format(date_time,'%S'))
@@ -110,16 +113,9 @@ library(zoo)
       
       #Meteo: meteo information measured every 15 min. If Atm pressure is used for calculating the fluxes, you might need this file. Otherwise, a constant AtmPress could be used. 
       Meteo <- read.table("C:/Users/barbafej/Dropbox/SJ_stem_fluxes/SJ_studies/SJ_full_paper/txt/SJ_meteo_data.txt", fill=TRUE,header=TRUE,sep="\t",na.strings=c("NA","#N/A!","#N/A","#NA!"))    
-                                                    #Tree_diam: diameters for each tree at the heigh of each collar. Not necessary for calculating the fluxes
-                                                    Tree_diam <- read.table("//anr.udel.edu/files/shares/jbarba/My Documents/SJ_Data/SJ_stem_fluxes/SJ_full_paper/txt/SJ_tree_diameters.txt", fill=TRUE,header=TRUE,sep="\t",na.strings=c("NA","#N/A!","#N/A","#NA!"))
-                                                    #For_str: forest structure structure file for the plot. Not necessary for calculating the fluxes
-      # Eliminar?                                              For_str <- read.table("//anr.udel.edu/files/shares/jbarba/My Documents/SJ_Data/SJ_stem_fluxes/SJ_full_paper/txt/SJ_forest_structure.txt", fill=TRUE,header=TRUE,sep="\t",na.strings=c("NA","#N/A!","#N/A","#NA!"))
-                                                    #GWT: ground water table measured every 15 min measured at the center of the plot. Not necessary for calculating the fluxes
-                                                    GWT<-read.table("//anr.udel.edu/files/shares/jbarba/My Documents/SJ_Data/SJ_stem_fluxes/SJ_full_paper/txt/SJ_GWL.txt", fill=TRUE,header=TRUE,sep="\t",na.strings=c("NA","#N/A!","#N/A","#NA!"))
-                                                    SF<-read.table("//anr.udel.edu/files/shares/jbarba/My Documents/SJ_Data/SJ_stem_fluxes/SJ_full_paper/txt/SJ_SF_full_experiment.txt", fill=TRUE,header=TRUE,sep="\t",na.strings=c("NA","#N/A!","#N/A","#NA!"))
-                                                    
+                                              
       LGR_fn$Hour <- as.integer(sapply(strsplit(as.character(LGR_fn$Real_time), ":"), "[", 1))
-      #LGR_fn (field notes) is a txt file with the information recorded in the field (LGR file name, code for samplig point, initial measurement time...[see the LGR_field_notes_example Excel])
+      #LGR_fn (field notes) is a txt file with the information recorded in the field (LGR file name, code for sampling point, initial measurement time...[see the LGR_field_notes_example Excel])
       LGR_fn<-LGR_fn[complete.cases(LGR_fn), ]
       colnames(LGR_fn)[3]<-"Location"
       LGR_fn$DOY <- strftime(as.POSIXlt(LGR_fn$Date, format = "%m/%d/%Y"), format="%j")
@@ -132,15 +128,9 @@ library(zoo)
       for (i in 1:length(LGR_fn$Date)){
         for (k in 1:length(Meteo_mean$Date_2)){
           if(LGR_fn$Date[i]== Meteo_mean$Date_2[k] & LGR_fn$Hour[i]== Meteo_mean$Hour[k]){
-            LGR_fn$VWC[i]<-Meteo_mean$VWC.mean[k]
-            LGR_fn$Soil_temp[i]<-Meteo_mean$Soil_temp.mean[k]
-            LGR_fn$EC[i]<-Meteo_mean$EC.mean[k]
-            LGR_fn$RH[i]<-Meteo_mean$RH.mean[k]
-            LGR_fn$Air_temp[i]<-Meteo_mean$Air_temp.mean[k]
-            LGR_fn$AtmPress[i]<-Meteo_mean$AtmPress.mean[k]
-            LGR_fn$Wind_speed[i]<-Meteo_mean$Wind_speed.mean[k]
-            LGR_fn$Wind_Gusts[i]<-Meteo_mean$Wind_Gusts.mean[k]
-            LGR_fn$Air_Direction[i]<-Meteo_mean$Air_Direction.mean[k]
+            LGR_fn$Air_temp[i]<-Meteo_mean$Air_temp.mean[k]  #This could be used for flux calculations
+            LGR_fn$AtmPress[i]<-Meteo_mean$AtmPress.mean[k]  #This could be used for flux calculations
+
           }
         }    
       }      
