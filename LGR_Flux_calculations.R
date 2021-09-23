@@ -147,9 +147,9 @@ library(zoo)
     levdata <- levels(as.factor(LGR_data$file_name)) # This is a list of the different file names in the LGR_data. This list SHOULD HAVE AT LEAST the same files as in LGR_fn (but probably will have more files)
                                                       # Check that the files spelling is the same for LGR_data and LGR_fn 
     LGR_fluxes<-data.frame() 
-    area<-pi*0.055^2  #area of the chamber in m2)
+    area<-pi*0.055^2  #area of the chamber in m2
     vol<-area*0.095 + pi*0.00175^2*(1.62+1.70) + 0.0002 #volume chamber +volume tubbing + volume LGR cell in m3
-    #AtmPress<-101.325 # I just put a constant value, but this should be improved (kg m-2 s-1)
+    #AtmPress<-101.325 # If Atmospheric Pressure is not available at the measuring time, we can put a constant value (kg m-2 s-1)
     glc<-0.00831447 # ideal gas law constant in kg m2 micromol-1 k-1
     
     for (i in 1:length(levfn)){
@@ -206,6 +206,7 @@ library(zoo)
     fn$H2O_adjR2 <- NA
     fn$H2O_fit <- NA
     
+#Nezha -> Thgis part clearly need an improvement. This loop is just for selecting the closest LGR_data time to the LGR_fn time      
     levdat <- levels(as.factor(as.character(datasub$TIMEnew)))
     levdat2 <- levels(as.factor(as.character(datasub$TIMEnew2)))
     levdat3 <- levels(as.factor(as.character(datasub$TIMEnew3)))
@@ -260,7 +261,10 @@ library(zoo)
       reg_fitH2O<-lm(H2O_ppm~Sec_cont, data=reg_data)
 
       #This equation is the same as in the Li-COR manual [i.e. CO2(t) ~ Cx + (CO2i-Cx)*exp(-a*(t-ti))  ] where Cx is the value at the assymptote, CO2i is the initial CO2 value, and ti is the initial time. 
-      #The nls functions is picky to the starting values of the parameters. We estimate the starting assymptote as the highest CO2 value, and the starting "a"  as -log(1/2)/"time when the concentration achieves 50% of the assymptote. Once we provide the starting values, the nls computes the final values.This model works for positive and negative fluxes 
+      
+# Nezha -> This is the only part of the code that doesn't work properly. For estimating flux measurements we need to fit a predefined equation. However, we need to provide initial parameters estimates. In mot of the cases, the exponetial flux cannot be calculated, and I guess it's because the initial parameters are not appropriate        
+      #The nls functions is picky to the starting values of the parameters. We estimate the starting assymptote as the highest CO2 value, and the starting "a"  as -log(1/2)/"time when the concentration achieves 50% of the assymptote. Once we provide the starting values, the nls computes the final values.This model works for positive and negative fluxes.  
+
       reg_data$Sec_cont_0 <- reg_data$Sec_cont-reg_data$Sec_cont[1]+1 #The next function has problems finding the starting parameters when Sec_cont is too high. 
       exp_fitCO2 <- tryCatch(nls(CO2d_ppm ~ B + (reg_data$CO2d_ppm[1]- B)*exp(-a*(Sec_cont_0-(reg_data$Sec_cont_0[1]))), data = reg_data, start = list(B = reg_data$CO2d_ppm[length(reg_data$CO2d_ppm)], a = -log(1/2)/(mean(reg_data$Sec_cont_0)))), error = function(e) {  skip_to_next <<- TRUE})
       exp_fitCH4 <- tryCatch(nls(CH4d_ppm ~ B + (reg_data$CH4d_ppm[1]- B)*exp(-a*(Sec_cont_0-(reg_data$Sec_cont_0[1]))), data = reg_data, start = list(B = reg_data$CH4d_ppm[length(reg_data$CH4d_ppm)], a = -log(1/2)/(mean(reg_data$Sec_cont_0)))), error = function(e) {  skip_to_next <<- TRUE})
@@ -308,7 +312,8 @@ library(zoo)
       }
       
       # See Warner et al 2017. Ecosystems 20, 1205:1216 for details in linear calculation
-      
+# Nezha -> if AtmPress is not provided in a meteorologial data file, we applied a constant
+        
       fn$CO2_lin_flux[k]<- coef(reg_fitCO2)[2]*(vol/area)*(fn$AtmPress[k]/(glc*(fn$Temp[k]+273))) #micromol m-2 s-1
       fn$CH4_lin_flux[k]<- coef(reg_fitCH4)[2]*(vol/area)*(fn$AtmPress[k]/(glc*(fn$Temp[k]+273)))*1000 #nmol m-2 s-1
       fn$H2O_lin_flux[k]<- coef(reg_fitH2O)[2]*(vol/area)*(fn$AtmPress[k]/(glc*(fn$Temp[k]+273))) #micromol m-2 s-1
@@ -322,6 +327,7 @@ library(zoo)
       # However, when the expinential fit is very bad, the calculated flux could be really high or low (negative), so we selected an R2 threshold of 0.2 (empirically selected)
       # So when the R2 is higher than 0.2, we select the regression (linear or exponential) with higher R2, and when the R2 is lower than 0.2, we keep the linear fit (more conservative)
       # This is less important for CO2 than for CH4 or H2O, because in the first case, most of the fluxes have an R2 higher than 0.95  
+# Nezha -> the problem with the L326-329 explanation is that, because exponential fit doesn't usually work because of the wrong initial parameters selection, linear fit is selected in most of the cases.        
       
       # Selected flux for CO2
       if(length(exp_fitCO2)==6){
