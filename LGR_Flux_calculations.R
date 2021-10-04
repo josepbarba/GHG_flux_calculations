@@ -32,14 +32,15 @@ library(zoo)
     # Read all the files and create a Path column to store filenames
     LGR_data <- rbindlist(sapply(list_of_txt_files, fread, simplify = FALSE),
                     use.names = TRUE, idcol = "Path", fill=T)
+           
+# Nezha>> I don't know what happen with the next 7 lines of code, but iot takes more than 2 hours for runing it.
+        aaa<-strsplit(LGR_data$Path, "/")
 
-    aaa<-strsplit(LGR_data$Path, "/")
-
-    x <- data.frame(name=character())
-    x$name <-as.character(x$name)
-    for(i in 1:length(aaa)){
-        x[i, 1] <- aaa[[i]][[length(aaa[[i]])]]
-            }
+        x <- data.frame(name=character())
+        x$name <-as.character(x$name)
+        for(i in 1:length(aaa)){
+            x[i, 1] <- aaa[[i]][[length(aaa[[i]])]]
+                }
     
   # Nezha>> Sometimes, I get an error with a subfolder: sometimes a zip folder cannot be opened. When that happens, I have to copy-paste the txt file outside the compressed folder. Could this be solved?
     
@@ -310,9 +311,11 @@ library(zoo)
         fn$adjR2H2O_exp[k]<-summary(lm(reg_data$H2O_ppm~predict(exp_fitH2O)))$adj.r.squared  #This is a way to calculate a pseudo-R2 for the nls model
         fn$pvalueH2O_exp[k]<-summary(exp_fitH2O)$coefficients[2,4]
       }
-      
+
+# Nezha -> Could be possible to plot the data, the linear and exponential fits of each reg_data subset, including the R2 of each fit as well. It would be nice if this can be saved, so it would work as a quick quality conytrol check. 
+        
       # See Warner et al 2017. Ecosystems 20, 1205:1216 for details in linear calculation
-# Nezha -> if AtmPress is not provided in a meteorologial data file, we applied a constant
+# Nezha -> if AtmPress is not provided in a meteorologial data file, we apply a constant
         
       fn$CO2_lin_flux[k]<- coef(reg_fitCO2)[2]*(vol/area)*(fn$AtmPress[k]/(glc*(fn$Temp[k]+273))) #micromol m-2 s-1
       fn$CH4_lin_flux[k]<- coef(reg_fitCH4)[2]*(vol/area)*(fn$AtmPress[k]/(glc*(fn$Temp[k]+273)))*1000 #nmol m-2 s-1
