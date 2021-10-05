@@ -33,7 +33,7 @@ library(zoo)
     LGR_data <- rbindlist(sapply(list_of_txt_files, fread, simplify = FALSE),
                     use.names = TRUE, idcol = "Path", fill=T)
            
-# Nezha>> I don't know what happen with the next 7 lines of code, but iot takes more than 2 hours for runing it.
+# Nezha>> I don't know what happen with the next 7 lines of code, but I'vebeen waiting over night, and it's still running. It should finish in few minutes. It should be an easy step, just splitting a character. I've tried with single folders and it works for each one in less than 30 sec, but something is wrong when all files together.
         aaa<-strsplit(LGR_data$Path, "/")
 
         x <- data.frame(name=character())
