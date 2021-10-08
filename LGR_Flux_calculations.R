@@ -34,18 +34,14 @@ library(zoo)
                     use.names = TRUE, idcol = "Path", fill=T)
            
 # Nezha>> I don't know what happen with the next 7 lines of code, but I'vebeen waiting over night, and it's still running. It should finish in few minutes. It should be an easy step, just splitting a character. I've tried with single folders and it works for each one in less than 30 sec, but something is wrong when all files together.
-        aaa<-strsplit(LGR_data$Path, "/")
-
-        x <- data.frame(name=character())
-        x$name <-as.character(x$name)
-        for(i in 1:length(aaa)){
-            x[i, 1] <- aaa[[i]][[length(aaa[[i]])]]
-                }
+# @NA I have replaced that chunk with a faster way to extract file name 
+    
+    # LGR_data$file_name = basename(LGR_data$Path) # filename with extension
+    LGR_data$file_name  = substr(basename(LGR_data$Path), 1, nchar(basename(LGR_data$Path))-4) # filename without extension
     
   # Nezha>> Sometimes, I get an error with a subfolder: sometimes a zip folder cannot be opened. When that happens, I have to copy-paste the txt file outside the compressed folder. Could this be solved?
-    
-    LGR_data$file_name <- x$name
-    
+  # @NA Can you give me an example when that happens? Perhaps the file name patterhs are different, or the file is in a sub-subfolder?
+
     #Some names of the variables have " ", [, ], and '. We have to remove these characters for further analysis.
     colnames(LGR_data) <- c('Path', 'Time', 'CH4_ppm', 'CH4_ppm_sd', 'H2O_ppm', 'H2O_ppm_sd', 'CO2_ppm', 'CO2_ppm_sd', 'CH4d_ppm', 'CH4d_ppm_sd', 'CO2d_ppm', 'CO2d_ppm_sd', 'GasP_torr', 'GasP_torr_sd', 'GasT_C', 
                             'GasT_C_sd', 'AmbT_C', 'AmbT_C_sd', 'RD0_us', 'RD0_us_sd', 'RD1_us', 'D1_us_sd', 'Gnd', 'Gnd_sd', 'LTC0_b', 'LTC0_b_sd', 'LTC0_v', 'LTC0_v_sd', 'LTC1_b', 'LTC1_b_sd', 'LTC1_v', 'LTC1_v_sd', 
